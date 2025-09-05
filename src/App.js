@@ -230,8 +230,9 @@ async function handleConsultar() {
     }
   }
 
-  // Máscara dinâmica: CPF enquanto <=11 dígitos, depois CNPJ
-  const mask = onlyDigits(docExibicao).length <= 11 ? "999.999.999-99" : "99.999.999/9999-99";
+  // Máscara: CNPJ
+  const mask = "99.999.999/9999-99";
+
 
   return (
     <div style={{ maxWidth: 520, margin: "30px auto", fontFamily: "Arial, sans-serif" }}>
@@ -271,10 +272,10 @@ async function handleConsultar() {
         />
 
         <label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}>
-          CPF ou CNPJ
+          CNPJ
         </label>
         <InputMask
-          mask={mask}
+          mask="99.999.999/9999-99"  // máscara fixa de CNPJ
           value={docExibicao}
           onChange={handleDocumentoChange}
         >
@@ -282,12 +283,14 @@ async function handleConsultar() {
             <input
               {...inputProps}
               type="text"
-              placeholder="Digite CPF ou CNPJ"
+              placeholder="Digite o CNPJ"
               style={{ width: "100%", padding: 8, marginBottom: 6 }}
               required
             />
           )}
         </InputMask>
+
+        
         {erroDocumento && <div style={{ color: "crimson", marginBottom: 8 }}>{erroDocumento}</div>}
 
         <button
