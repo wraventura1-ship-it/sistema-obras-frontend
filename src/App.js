@@ -146,6 +146,21 @@ export default function App() {
     }
     if (documento.length === 14 && !isValidCNPJ(documento)) {
       setErroDocumento("CNPJ inválido.");
+
+      // >>> ADICIONE ESTE BLOCO ACIMA DO "return ("
+async function handleConsultar() {
+  try {
+    const resp = await fetch(`${API_URL}/empresas`);
+    if (!resp.ok) throw new Error("Erro ao buscar empresas");
+    const data = await resp.json();
+    setEmpresas(Array.isArray(data) ? data : []);
+    setMostrarLista(true); // mostra a lista assim que carregar
+  } catch (e) {
+    console.error("Erro ao buscar empresas:", e);
+    alert("Erro ao buscar empresas");
+  }
+}
+
       return;
     }
 
