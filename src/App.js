@@ -274,6 +274,30 @@ async function handleConsultar() {
         >
           Cadastrar
         </button>
+        
+            
+            
+            
+            <button
+              type="button"
+              onClick={fetchEmpresas}
+              style={{
+                padding: "10px 15px",
+                background: "#28a745",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                cursor: "pointer",
+                marginTop: 6,
+                marginLeft: 10,
+              }}
+            >
+              Consultar Empresas
+            </button>
+
+
+
+    
       </form>
 
       <div style={{ marginTop: 20 }}>
