@@ -2,18 +2,19 @@ import React, { useEffect, useState } from "react";
 import InputMask from "react-input-mask";
 
 // Função para buscar empresas no backend
-async function fetchEmpresas(setEmpresas) {
+async function fetchEmpresas() {
   try {
     const response = await fetch("https://sistema-obras.onrender.com/empresas");
     if (!response.ok) {
       throw new Error("Erro ao buscar empresas");
     }
     const data = await response.json();
-    setEmpresas(data);
+    setEmpresas(data); // aqui ele usa direto o state do React
   } catch (error) {
     console.error("Erro ao carregar empresas:", error);
   }
 }
+
 
 
 
@@ -298,21 +299,22 @@ async function handleConsultar() {
             
             
             <button
-              type="button"
-              onClick={fetchEmpresas}
-              style={{
-                padding: "10px 15px",
-                background: "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: 6,
-                cursor: "pointer",
-                marginTop: 6,
-                marginLeft: 10,
-              }}
-            >
-              Consultar Empresas
-            </button>
+  type="button"
+  onClick={fetchEmpresas}   // ⬅️ só isso muda
+  style={{
+    padding: "10px 15px",
+    background: "#28a745",
+    color: "white",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    marginTop: 6,
+    marginLeft: 10,
+  }}
+>
+  Consultar Empresas
+</button>
+
 
 
 
