@@ -1,6 +1,25 @@
 import React, { useEffect, useState } from "react";
 import InputMask from "react-input-mask";
 
+// Função para buscar empresas no backend
+async function fetchEmpresas(setEmpresas) {
+  try {
+    const response = await fetch("https://sistema-obras.onrender.com/empresas");
+    if (!response.ok) {
+      throw new Error("Erro ao buscar empresas");
+    }
+    const data = await response.json();
+    setEmpresas(data);
+  } catch (error) {
+    console.error("Erro ao carregar empresas:", error);
+  }
+}
+
+
+
+
+
+
 // URL do backend (Render)
 const API_URL = "https://sistema-obras.onrender.com";
 
@@ -304,11 +323,13 @@ async function handleConsultar() {
         <button
           onClick={() => setMostrarLista(!mostrarLista)}
           style={{
-            padding: "8px 12px",
-            background: "#e9ecef",
-            border: "1px solid #ced4da",
+            padding: "10px 15px",
+            background: "#28a745",
+            color: "white",
+            border: "none",
             borderRadius: 6,
             cursor: "pointer",
+            marginTop: 6,
           }}
         >
           {mostrarLista ? "Ocultar empresas" : "Ver empresas cadastradas"}
