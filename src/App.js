@@ -70,6 +70,22 @@ function isValidCNPJ(cnpj) {
   return cnpj.endsWith(`${dig1}${dig2}`);
 }
 
+function isValidDocumento(doc) {
+  const digits = doc.replace(/\D/g, ""); // só números
+
+  if (digits.length === 11) {
+    return isValidCPF(digits);
+  } else if (digits.length === 14) {
+    return isValidCNPJ(digits);
+  }
+
+  return false;
+}
+
+
+
+
+
 // Formata para exibição
 function formatDocumento(digits) {
   const v = onlyDigits(digits);
