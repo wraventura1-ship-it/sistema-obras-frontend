@@ -194,100 +194,94 @@ export default function App() {
         </div>
       )}
 
+      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="Número da empresa (5 dígitos)"
+          value={numero}
+          onChange={handleNumeroChange}
+          required
+          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+        />
+        {erroNumero && <p style={{ color: "red" }}>{erroNumero}</p>}
 
+        <input
+          type="text"
+          placeholder="Nome da empresa"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          required
+          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+        />
 
+        <label
+          style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}
+        >
+          CNPJ
+        </label>
+        <InputMask
+          mask="99.999.999/9999-99"
+          value={docExibicao}
+          onChange={handleDocumentoChange}
+        >
+          {(inputProps) => (
+            <input
+              {...inputProps}
+              type="text"
+              placeholder="Digite o CNPJ"
+              style={{ width: "100%", padding: 8, marginBottom: 6 }}
+              required
+            />
+          )}
+        </InputMask>
+        {erroDocumento && <p style={{ color: "red" }}>{erroDocumento}</p>}
 
-<form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-  <input
-    type="text"
-    placeholder="Número da empresa (5 dígitos)"
-    value={numero}
-    onChange={(e) => setNumero(e.target.value)}
-    required
-    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-  />
-  {erroNumero && <p style={{ color: "red" }}>{erroNumero}</p>}
+        {/* Botão principal */}
+        <button
+          type="submit"
+          style={{
+            padding: "10px 15px",
+            background: editandoId ? "#ffc107" : "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer",
+            marginTop: 6,
+          }}
+        >
+          {editandoId ? "Salvar alterações" : "Cadastrar"}
+        </button>
 
-  <input
-    type="text"
-    placeholder="Nome da empresa"
-    value={nome}
-    onChange={(e) => setNome(e.target.value)}
-    required
-    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-  />
+        {/* Botão de cancelar edição */}
+        {editandoId && (
+          <button
+            type="button"
+            onClick={() => {
+              setNumero("");
+              setNome("");
+              setDocExibicao("");
+              setDocumento("");
+              setErroDocumento("");
+              setErroNumero("");
+              setEditandoId(null);
+            }}
+            style={{
+              padding: "10px 15px",
+              background: "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: 6,
+              cursor: "pointer",
+              marginTop: 6,
+              marginLeft: 10,
+            }}
+          >
+            Cancelar edição
+          </button>
+        )}
+      </form>
 
-  <label
-    style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}
-  >
-    CNPJ
-  </label>
-  <InputMask
-    mask="99.999.999/9999-99"
-    value={docExibicao}
-    onChange={handleDocumentoChange}
-  >
-    {(inputProps) => (
-      <input
-        {...inputProps}
-        type="text"
-        placeholder="Digite o CNPJ"
-        style={{ width: "100%", padding: 8, marginBottom: 6 }}
-        required
-      />
-    )}
-  </InputMask>
-  {erroDocumento && <p style={{ color: "red" }}>{erroDocumento}</p>}
-
-  {/* Botão principal */}
-  <button
-    type="submit"
-    style={{
-      padding: "10px 15px",
-      background: editandoId ? "#ffc107" : "#007bff",
-      color: "white",
-      border: "none",
-      borderRadius: 6,
-      cursor: "pointer",
-      marginTop: 6,
-    }}
-  >
-    {editandoId ? "Salvar alterações" : "Cadastrar"}
-  </button>
-
-  {/* Botão de cancelar edição */}
-  {editandoId && (
-    <button
-      type="button"
-      onClick={() => {
-        setNumero("");
-        setNome("");
-        setDocExibicao("");
-        setDocumento("");
-        setErroDocumento("");
-        setErroNumero("");
-        setEditandoId(null);
-      }}
-      style={{
-        padding: "10px 15px",
-        background: "#6c757d",
-        color: "white",
-        border: "none",
-        borderRadius: 6,
-        cursor: "pointer",
-        marginTop: 6,
-        marginLeft: 10,
-      }}
-    >
-      Cancelar edição
-    </button>
-  )}
-</form>
-
-
-        
-
-      <div style={{ marginTop: 20 }}>
+           <div style={{ marginTop: 20 }}>
         <button
           onClick={() => setMostrarLista(!mostrarLista)}
           style={{
