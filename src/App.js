@@ -1,26 +1,6 @@
 import React, { useEffect, useState } from "react";
 import InputMask from "react-input-mask";
 
-// Função para buscar empresas no backend
-async function fetchEmpresas() {
-  try {
-    const response = await fetch("https://sistema-obras.onrender.com/empresas");
-    if (!response.ok) {
-      throw new Error("Erro ao buscar empresas");
-    }
-    const data = await response.json();
-    setEmpresas(data); // aqui ele usa direto o state do React
-  } catch (error) {
-    console.error("Erro ao carregar empresas:", error);
-  }
-}
-
-
-
-
-
-
-
 // URL do backend (Render)
 const API_URL = "https://sistema-obras.onrender.com";
 
@@ -71,33 +51,25 @@ function isValidCNPJ(cnpj) {
 }
 
 function isValidDocumento(doc) {
-  const digits = doc.replace(/\D/g, ""); // só números
-
-  if (digits.length === 11) {
-    return isValidCPF(digits);
-  } else if (digits.length === 14) {
-    return isValidCNPJ(digits);
-  }
-
+  const digits = doc.replace(/\D/g, "");
+  if (digits.length === 11) return isValidCPF(digits);
+  if (digits.length === 14) return isValidCNPJ(digits);
   return false;
 }
-
-
-
-
 
 // Formata para exibição
 function formatDocumento(digits) {
   const v = onlyDigits(digits);
   if (v.length === 11) {
-    // CPF: 999.999.999-99
     return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   }
   if (v.length === 14) {
-    // CNPJ: 99.999.999/9999-99
-    return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+    return v.replace(
+      /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+      "$1.$2.$3/$4-$5"
+    );
   }
-  return v; // parcial
+  return v;
 }
 
 export default function App() {
@@ -113,6 +85,9 @@ export default function App() {
   const [empresas, setEmpresas] = useState([]);
   const [mostrarLista, setMostrarLista] = useState(false);
   const [mensagem, setMensagem] = useState("");
+
+  // Edição
+  const [editandoId, setEditandoId] = useState(null);
 
   // Carregar lista ao abrir
   useEffect(() => {
@@ -131,25 +106,24 @@ export default function App() {
 
   // Ao digitar documento
   function handleDocumentoChange(e) {
+  // Ao digitar documento
+  function handleDocumentoChange(e) {
     const exibicao = e.target.value;
     const digits = onlyDigits(exibicao);
     setDocExibicao(exibicao);
     setDocumento(digits);
 
-    // Validação em tempo real
     if (digits.length === 0) {
       setErroDocumento("");
       return;
     }
     if (digits.length <= 11) {
-      // CPF parcial/cheio
       if (digits.length < 11) {
         setErroDocumento("Digite 11 dígitos para CPF ou continue para CNPJ.");
       } else {
         setErroDocumento(isValidCPF(digits) ? "" : "CPF inválido.");
       }
     } else {
-      // CNPJ parcial/cheio
       if (digits.length < 14) {
         setErroDocumento("Digite 14 dígitos para CNPJ.");
       } else {
@@ -165,110 +139,46 @@ export default function App() {
   }
 
   async function handleSubmit(e) {
-  e.preventDefault();
-
-  try {
-    const payload = {
-      numero,
-      nome,
-      documento,
-    };
-
-    let response;
-
-    if (editandoId) {
-      // Atualizar empresa existente
-      response = await fetch(`https://sistema-obras.onrender.com/empresas/${editandoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      // Criar nova empresa
-      response = await fetch("https://sistema-obras.onrender.com/empresas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    }
-
-    if (!response.ok) {
-      throw new Error("Erro ao salvar empresa");
-    }
-
-    alert(editandoId ? "Empresa atualizada!" : "Empresa cadastrada!");
-
-    // Limpar form e resetar edição
-    setNumero("");
-    setNome("");
-    setDocExibicao("");
-    setDocumento("");
-    setErroDocumento("");
-    setErroNumero("");
-    setEditandoId(null);
-
-    fetchEmpresas(); // atualizar lista
-  } catch (error) {
-    alert("Erro: " + error.message);
-  }
-}
-
-
- 
-
-
-
-
-
-
-
-    
-      // >>> ADICIONE ESTE BLOCO ACIMA DO "return ("
-async function handleConsultar() {
-  try {
-    const resp = await fetch(`${API_URL}/empresas`);
-    if (!resp.ok) throw new Error("Erro ao buscar empresas");
-    const data = await resp.json();
-    setEmpresas(Array.isArray(data) ? data : []);
-    setMostrarLista(true); // mostra a lista assim que carregar
-  } catch (e) {
-    console.error("Erro ao buscar empresas:", e);
-    alert("Erro ao buscar empresas");
-  }
-}
-
-      return;
-    }
+    e.preventDefault();
 
     try {
-      const nova = { numero, nome, documento }; // envia só dígitos
-      const resp = await fetch(`${API_URL}/empresas`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nova),
-      });
+      const payload = { numero, nome, documento };
 
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data?.detail || "Erro ao cadastrar");
+      let response;
+      if (editandoId) {
+        response = await fetch(`${API_URL}/empresas/${editandoId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        response = await fetch(`${API_URL}/empresas`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
-      setMensagem("✅ Empresa cadastrada com sucesso!");
+      if (!response.ok) {
+        throw new Error("Erro ao salvar empresa");
+      }
+
+      alert(editandoId ? "Empresa atualizada!" : "Empresa cadastrada!");
+
       setNumero("");
       setNome("");
       setDocExibicao("");
       setDocumento("");
       setErroDocumento("");
       setErroNumero("");
+      setEditandoId(null);
 
-      // Recarrega lista
-      carregarEmpresas();
-      setMostrarLista(true);
-    } catch (err) {
-      console.error(err);
-      setMensagem("❌ Erro ao cadastrar empresa.");
-    } finally {
-      setTimeout(() => setMensagem(""), 4000);
+      carregarEmpresas(); // atualizar lista
+    } catch (error) {
+      alert("Erro: " + error.message);
     }
   }
+
 
   // Máscara: CNPJ
   const mask = "99.999.999/9999-99";
