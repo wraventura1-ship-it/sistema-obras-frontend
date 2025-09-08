@@ -165,24 +165,64 @@ export default function App() {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validações finais
-    if (numero.length !== 5) {
-      setErroNumero("O número deve ter 5 dígitos.");
-      return;
-    }
-    if (!(documento.length === 11 || documento.length === 14)) {
-      setErroDocumento("Informe CPF (11) ou CNPJ (14) dígitos.");
-      return;
-    }
-    if (documento.length === 11 && !isValidCPF(documento)) {
-      setErroDocumento("CPF inválido.");
-      return;
-    }
-    if (documento.length === 14 && !isValidCNPJ(documento)) {
-      setErroDocumento("CNPJ inválido.");
+  try {
+    const payload = {
+      numero,
+      nome,
+      documento,
+    };
 
+    let response;
+
+    if (editandoId) {
+      // Atualizar empresa existente
+      response = await fetch(`https://sistema-obras.onrender.com/empresas/${editandoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      // Criar nova empresa
+      response = await fetch("https://sistema-obras.onrender.com/empresas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    if (!response.ok) {
+      throw new Error("Erro ao salvar empresa");
+    }
+
+    alert(editandoId ? "Empresa atualizada!" : "Empresa cadastrada!");
+
+    // Limpar form e resetar edição
+    setNumero("");
+    setNome("");
+    setDocExibicao("");
+    setDocumento("");
+    setErroDocumento("");
+    setErroNumero("");
+    setEditandoId(null);
+
+    fetchEmpresas(); // atualizar lista
+  } catch (error) {
+    alert("Erro: " + error.message);
+  }
+}
+
+
+ 
+
+
+
+
+
+
+
+    
       // >>> ADICIONE ESTE BLOCO ACIMA DO "return ("
 async function handleConsultar() {
   try {
@@ -244,101 +284,98 @@ async function handleConsultar() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-        <label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}>
-          Número da empresa (5 dígitos)
-        </label>
-        <input
-          type="text"
-          value={numero}
-          onChange={handleNumeroChange}
-          placeholder="Ex: 00001"
-          maxLength={5}
-          style={{ width: "100%", padding: 8, marginBottom: 6 }}
-          required
-        />
-        {erroNumero && <div style={{ color: "crimson", marginBottom: 8 }}>{erroNumero}</div>}
 
-        <label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}>
-          Nome da empresa
-        </label>
-        <input
-          type="text"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          placeholder="Ex: Construtora Alfa Ltda"
-          style={{ width: "100%", padding: 8, marginBottom: 12 }}
-          required
-        />
 
-        <label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}>
-          CNPJ
-        </label>
-        <InputMask
-          mask="99.999.999/9999-99"  // máscara fixa de CNPJ
-          value={docExibicao}
-          onChange={handleDocumentoChange}
-        >
-          {(inputProps) => (
-            <input
-              {...inputProps}
-              type="text"
-              placeholder="Digite o CNPJ"
-              style={{ width: "100%", padding: 8, marginBottom: 6 }}
-              required
-            />
-          )}
-        </InputMask>
+
+<form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+  <input
+    type="text"
+    placeholder="Número da empresa (5 dígitos)"
+    value={numero}
+    onChange={(e) => setNumero(e.target.value)}
+    required
+    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+  />
+  {erroNumero && <p style={{ color: "red" }}>{erroNumero}</p>}
+
+  <input
+    type="text"
+    placeholder="Nome da empresa"
+    value={nome}
+    onChange={(e) => setNome(e.target.value)}
+    required
+    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+  />
+
+  <label
+    style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}
+  >
+    CNPJ
+  </label>
+  <InputMask
+    mask="99.999.999/9999-99"
+    value={docExibicao}
+    onChange={handleDocumentoChange}
+  >
+    {(inputProps) => (
+      <input
+        {...inputProps}
+        type="text"
+        placeholder="Digite o CNPJ"
+        style={{ width: "100%", padding: 8, marginBottom: 6 }}
+        required
+      />
+    )}
+  </InputMask>
+  {erroDocumento && <p style={{ color: "red" }}>{erroDocumento}</p>}
+
+  {/* Botão principal */}
+  <button
+    type="submit"
+    style={{
+      padding: "10px 15px",
+      background: editandoId ? "#ffc107" : "#007bff",
+      color: "white",
+      border: "none",
+      borderRadius: 6,
+      cursor: "pointer",
+      marginTop: 6,
+    }}
+  >
+    {editandoId ? "Salvar alterações" : "Cadastrar"}
+  </button>
+
+  {/* Botão de cancelar edição */}
+  {editandoId && (
+    <button
+      type="button"
+      onClick={() => {
+        setNumero("");
+        setNome("");
+        setDocExibicao("");
+        setDocumento("");
+        setErroDocumento("");
+        setErroNumero("");
+        setEditandoId(null);
+      }}
+      style={{
+        padding: "10px 15px",
+        background: "#6c757d",
+        color: "white",
+        border: "none",
+        borderRadius: 6,
+        cursor: "pointer",
+        marginTop: 6,
+        marginLeft: 10,
+      }}
+    >
+      Cancelar edição
+    </button>
+  )}
+</form>
+
 
         
-        {erroDocumento && <div style={{ color: "crimson", marginBottom: 8 }}>{erroDocumento}</div>}
-
-        <button
-          type="submit"
-          style={{
-            padding: "10px 15px",
-            background: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-            marginTop: 6,
-          }}
-          disabled={
-            numero.length !== 5 ||
-            !nome ||
-            !documento ||
-            !!erroDocumento
-          }
-        >
-          Cadastrar
-        </button>
-        
-            
-            
-            
-            <button
-  type="button"
-  onClick={fetchEmpresas}   // ⬅️ só isso muda
-  style={{
-    padding: "10px 15px",
-    background: "#28a745",
-    color: "white",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer",
-    marginTop: 6,
-    marginLeft: 10,
-  }}
->
-  Consultar Empresas
-</button>
-
-
-
-
-    
-      </form>
 
       <div style={{ marginTop: 20 }}>
         <button
