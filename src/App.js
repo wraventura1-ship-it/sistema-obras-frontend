@@ -1,48 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import InputMask from "react-input-mask";
 
-// URL do backend (Render)
-const API_URL = "https://sistema-obras.onrender.com";
+const API_URL = "http://localhost:8000"; // ajuste se o backend estiver em outra porta/URL
 
-// Utilidade: manter só números
-const onlyDigits = (v) => (v || "").replace(/\D/g, "");
-
-// Validação CPF
-function isValidCPF(cpf) {
-  cpf = onlyDigits(cpf);
-  if (!cpf || cpf.length !== 11) return false;
-  if (/^(\d)\1{10}$/.test(cpf)) return false;
-
-  let sum = 0;
-  for (let i = 0; i < 9; i++) sum += parseInt(cpf[i]) * (10 - i);
-  let r = (sum * 10) % 11;
-  if (r === 10 || r === 11) r = 0;
-  if (r !== parseInt(cpf[9])) return false;
-
-  sum = 0;
-  for (let i = 0; i < 10; i++) sum += parseInt(cpf[i]) * (11 - i);
-  r = (sum * 10) % 11;
-  if (r === 10 || r === 11) r = 0;
-  return r === parseInt(cpf[10]);
+// 🔹 Remove caracteres não numéricos
+function onlyDigits(str) {
+  return (str || "").replace(/\D/g, "");
 }
 
-// Validação CNPJ
-function isValidCNPJ(cnpj) {
+// 🔹 Formata o CNPJ para exibição (99.999.999/9999-99)
+function formatDocumento(cnpj) {
   cnpj = onlyDigits(cnpj);
+  if (cnpj.length !== 14) return cnpj;
+  return `${cnpj.substring(0, 2)}.${cnpj.substring(2, 5)}.${cnpj.substring(
+    5,
+    8
+  )}/${cnpj.substring(8, 12)}-${cnpj.substring(12, 14)}`;
+}
+
+// 🔹 Calcula dígito verificador do CNPJ
+const calc = (base) => {
+  let len = base.length - 7;
+  let sum = 0;
+  let pos = len;
+  for (let i = base.length; i >= 1; i--) {
+    sum += parseInt(base[base.length - i], 10) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  const r = sum % 11;
+  return r < 2 ? 0 : 11 - r;
+};
+
+// 🔹 Validação de CNPJ
+function isValidCNPJ(cnpj) {
+  cnpj = (cnpj || "").replace(/\D/g, "");
   if (!cnpj || cnpj.length !== 14) return false;
   if (/^(\d)\1{13}$/.test(cnpj)) return false;
-
-  const calc = (base) => {
-    let len = base.length - 7;
-    let sum = 0;
-    let pos = len;
-    for (let i = base.length; i >= 1; i--) {
-      sum += parseInt(base[base.length - i]) * pos--;
-      if (pos < 2) pos = 9;
-    }
-    const r = sum % 11;
-    return r < 2 ? 0 : 11 - r;
-  };
 
   const base = cnpj.substring(0, 12);
   const dig1 = calc(base);
@@ -50,46 +43,21 @@ function isValidCNPJ(cnpj) {
   return cnpj.endsWith(`${dig1}${dig2}`);
 }
 
-function isValidDocumento(doc) {
-  const digits = doc.replace(/\D/g, "");
-  if (digits.length === 11) return isValidCPF(digits);
-  if (digits.length === 14) return isValidCNPJ(digits);
-  return false;
-}
-
-// Formata para exibição
-function formatDocumento(digits) {
-  const v = onlyDigits(digits);
-  if (v.length === 11) {
-    return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-  }
-  if (v.length === 14) {
-    return v.replace(
-      /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-      "$1.$2.$3/$4-$5"
-    );
-  }
-  return v;
-}
-
+// 🔹 Componente principal
 export default function App() {
-  // Estados do formulário
   const [numero, setNumero] = useState("");
   const [nome, setNome] = useState("");
-  const [docExibicao, setDocExibicao] = useState(""); // com máscara
-  const [documento, setDocumento] = useState(""); // só números
+  const [docExibicao, setDocExibicao] = useState("");
+  const [documento, setDocumento] = useState("");
   const [erroDocumento, setErroDocumento] = useState("");
   const [erroNumero, setErroNumero] = useState("");
-
-  // Lista
-  const [empresas, setEmpresas] = useState([]);
-  const [mostrarLista, setMostrarLista] = useState(false);
   const [mensagem, setMensagem] = useState("");
 
-  // Edição
+  const [empresas, setEmpresas] = useState([]);
+  const [mostrarLista, setMostrarLista] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
 
-  // Carregar lista ao abrir
+  // Carregar empresas
   useEffect(() => {
     carregarEmpresas();
   }, []);
@@ -100,13 +68,10 @@ export default function App() {
       const data = await resp.json();
       setEmpresas(Array.isArray(data) ? data : []);
     } catch (e) {
-      console.error("Falha ao listar empresas:", e);
+      console.error("Erro ao listar empresas:", e);
     }
   }
 
-  // Ao digitar documento
-  function handleDocumentoChange(e) {
-  // Ao digitar documento
   function handleDocumentoChange(e) {
     const exibicao = e.target.value;
     const digits = onlyDigits(exibicao);
@@ -117,18 +82,10 @@ export default function App() {
       setErroDocumento("");
       return;
     }
-    if (digits.length <= 11) {
-      if (digits.length < 11) {
-        setErroDocumento("Digite 11 dígitos para CPF ou continue para CNPJ.");
-      } else {
-        setErroDocumento(isValidCPF(digits) ? "" : "CPF inválido.");
-      }
+    if (digits.length < 14) {
+      setErroDocumento("Digite 14 dígitos para CNPJ.");
     } else {
-      if (digits.length < 14) {
-        setErroDocumento("Digite 14 dígitos para CNPJ.");
-      } else {
-        setErroDocumento(isValidCNPJ(digits) ? "" : "CNPJ inválido.");
-      }
+      setErroDocumento(isValidCNPJ(digits) ? "" : "CNPJ inválido.");
     }
   }
 
@@ -143,8 +100,8 @@ export default function App() {
 
     try {
       const payload = { numero, nome, documento };
-
       let response;
+
       if (editandoId) {
         response = await fetch(`${API_URL}/empresas/${editandoId}`, {
           method: "PUT",
@@ -160,29 +117,57 @@ export default function App() {
       }
 
       if (!response.ok) {
-        throw new Error("Erro ao salvar empresa");
+        const errorData = await response.json();
+        throw new Error(errorData?.detail || "Erro ao salvar empresa");
       }
 
-      alert(editandoId ? "Empresa atualizada!" : "Empresa cadastrada!");
-
-      setNumero("");
-      setNome("");
-      setDocExibicao("");
-      setDocumento("");
-      setErroDocumento("");
-      setErroNumero("");
-      setEditandoId(null);
-
-      carregarEmpresas(); // atualizar lista
+      setMensagem(editandoId ? "✅ Empresa atualizada!" : "✅ Empresa cadastrada!");
+      resetForm();
+      carregarEmpresas();
+      setMostrarLista(true);
     } catch (error) {
-      alert("Erro: " + error.message);
+      console.error(error);
+      setMensagem("❌ " + error.message);
+    } finally {
+      setTimeout(() => setMensagem(""), 4000);
     }
   }
 
+  function resetForm() {
+    setNumero("");
+    setNome("");
+    setDocExibicao("");
+    setDocumento("");
+    setErroDocumento("");
+    setErroNumero("");
+    setEditandoId(null);
+  }
 
-  // Máscara: CNPJ
+  function handleEditar(e) {
+    setNumero(e.numero);
+    setNome(e.nome);
+    setDocExibicao(formatDocumento(e.documento));
+    setDocumento(e.documento);
+    setEditandoId(e.id);
+  }
+
+  async function handleDeletar(id) {
+    if (!window.confirm("Tem certeza que deseja excluir esta empresa?")) return;
+
+    try {
+      const resp = await fetch(`${API_URL}/empresas/${id}`, { method: "DELETE" });
+      if (!resp.ok) throw new Error("Erro ao excluir");
+      setMensagem("✅ Empresa excluída com sucesso!");
+      carregarEmpresas();
+    } catch (err) {
+      console.error(err);
+      setMensagem("❌ Erro ao excluir empresa.");
+    } finally {
+      setTimeout(() => setMensagem(""), 4000);
+    }
+  }
+
   const mask = "99.999.999/9999-99";
-
 
   return (
     <div style={{ maxWidth: 520, margin: "30px auto", fontFamily: "Arial, sans-serif" }}>
@@ -214,16 +199,8 @@ export default function App() {
           style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
         />
 
-        <label
-          style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}
-        >
-          CNPJ
-        </label>
-        <InputMask
-          mask="99.999.999/9999-99"
-          value={docExibicao}
-          onChange={handleDocumentoChange}
-        >
+        <label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}>CNPJ</label>
+        <InputMask mask={mask} value={docExibicao} onChange={handleDocumentoChange}>
           {(inputProps) => (
             <input
               {...inputProps}
@@ -236,7 +213,6 @@ export default function App() {
         </InputMask>
         {erroDocumento && <p style={{ color: "red" }}>{erroDocumento}</p>}
 
-        {/* Botão principal */}
         <button
           type="submit"
           style={{
@@ -252,19 +228,10 @@ export default function App() {
           {editandoId ? "Salvar alterações" : "Cadastrar"}
         </button>
 
-        {/* Botão de cancelar edição */}
         {editandoId && (
           <button
             type="button"
-            onClick={() => {
-              setNumero("");
-              setNome("");
-              setDocExibicao("");
-              setDocumento("");
-              setErroDocumento("");
-              setErroNumero("");
-              setEditandoId(null);
-            }}
+            onClick={resetForm}
             style={{
               padding: "10px 15px",
               background: "#6c757d",
@@ -281,7 +248,7 @@ export default function App() {
         )}
       </form>
 
-           <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: 20 }}>
         <button
           onClick={() => setMostrarLista(!mostrarLista)}
           style={{
@@ -307,8 +274,35 @@ export default function App() {
                 {empresas.map((e) => {
                   const docFmt = formatDocumento(e.documento);
                   return (
-                    <li key={e.id || `${e.numero}-${e.documento}`}>
+                    <li key={e.id || `${e.numero}-${e.documento}`} style={{ marginBottom: 6 }}>
                       <strong>{e.numero}</strong> — {e.nome} — {docFmt}
+                      <button
+                        onClick={() => handleEditar(e)}
+                        style={{
+                          marginLeft: 10,
+                          padding: "4px 8px",
+                          background: "#ffc107",
+                          border: "none",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeletar(e.id)}
+                        style={{
+                          marginLeft: 6,
+                          padding: "4px 8px",
+                          background: "#dc3545",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Deletar
+                      </button>
                     </li>
                   );
                 })}
