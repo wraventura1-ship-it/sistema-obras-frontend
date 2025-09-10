@@ -94,6 +94,7 @@ export default function App() {
 
   function handleNumeroChange(e) {
   let digits = onlyDigits(e.target.value).slice(0, 5);
+  setNumero(digits);
 
   // 🔹 Preenche automaticamente com zeros à esquerda
   if (digits.length > 0) {
@@ -102,8 +103,24 @@ export default function App() {
 
   setNumero(digits);
   setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
-}
+  }
+    <input
+      type="text"
+      placeholder="Número da empresa (5 dígitos)"
+      value={numero}
+      onChange={handleNumeroChange}
+      onBlur={() => {
+        if (numero) {
+          setNumero(numero.padStart(5, "0")); // 👉 completa com zeros ao sair do campo
+        }
+      }}
+      required
+      style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+    />
 
+
+
+  
   async function handleSubmit(e) {
     e.preventDefault();
 
