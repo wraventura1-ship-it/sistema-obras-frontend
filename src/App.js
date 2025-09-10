@@ -56,6 +56,9 @@ export default function App() {
   const [empresas, setEmpresas] = useState([]);
   const [mostrarLista, setMostrarLista] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
+  const [busca, setBusca] = useState("");
+  const [ordenarPor, setOrdenarPor] = useState("numero"); // numero ou nome
+
 
   // Carregar empresas
   useEffect(() => {
@@ -169,6 +172,23 @@ export default function App() {
 
   const mask = "99.999.999/9999-99";
 
+  
+  // 🔹 filtro + ordenação
+  const empresasFiltradas = empresas
+    .filter((e) =>
+      e.nome.toLowerCase().includes(busca.toLowerCase()) ||
+      e.numero.includes(busca)
+    )
+    .sort((a, b) => {
+      if (ordenarPor === "numero") {
+        return a.numero.localeCompare(b.numero);
+      }
+      if (ordenarPor === "nome") {
+        return a.nome.localeCompare(b.nome);
+      }
+      return 0;
+    });
+  
   return (
     <div style={{ maxWidth: 520, margin: "30px auto", fontFamily: "Arial, sans-serif" }}>
       <h2 style={{ marginBottom: 16 }}>Cadastro de Empresas</h2>
@@ -267,11 +287,32 @@ export default function App() {
         {mostrarLista && (
           <div style={{ marginTop: 14 }}>
             <h3 style={{ marginBottom: 10 }}>Empresas Cadastradas</h3>
+
+    
+            {/* 🔹 Busca + Ordenação */}
+            <div style={{ marginBottom: 10 }}>
+              <input
+                type="text"
+                placeholder="🔎 Buscar por nome ou número"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                style={{ padding: 6, width: "60%", marginRight: 10 }}
+              />
+              <select
+                value={ordenarPor}
+                onChange={(e) => setOrdenarPor(e.target.value)}
+                style={{ padding: 6 }}
+              >
+                <option value="numero">Ordenar por Número</option>
+                <option value="nome">Ordenar por Nome</option>
+              </select>
+            </div>
+
             {empresas.length === 0 ? (
               <div>Nenhuma empresa cadastrada ainda.</div>
             ) : (
               <ul style={{ paddingLeft: 18 }}>
-                {empresas.map((e) => {
+                {empresasFiltradas.map((e) => {
                   const docFmt = formatDocumento(e.documento);
                   return (
                     <li key={e.id || `${e.numero}-${e.documento}`} style={{ marginBottom: 6 }}>
