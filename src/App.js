@@ -96,17 +96,11 @@ export default function App() {
   let digits = onlyDigits(e.target.value).slice(0, 5);
   setNumero(digits);
   setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
-}
-
-
-  // 🔹 Preenche automaticamente com zeros à esquerda
-  if (digits.length > 0) {
-    digits = digits.padStart(5, "0");
   }
 
-  setNumero(digits);
-  setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
-  }
+
+  
+  
     <input
   type="text"
   placeholder="Número da empresa (5 dígitos)"
