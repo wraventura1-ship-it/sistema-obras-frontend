@@ -93,10 +93,16 @@ export default function App() {
   }
 
   function handleNumeroChange(e) {
-    const digits = onlyDigits(e.target.value).slice(0, 5);
-    setNumero(digits);
-    setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
+  let digits = onlyDigits(e.target.value).slice(0, 5);
+
+  // 🔹 Preenche automaticamente com zeros à esquerda
+  if (digits.length > 0) {
+    digits = digits.padStart(5, "0");
   }
+
+  setNumero(digits);
+  setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
+}
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -210,14 +216,17 @@ export default function App() {
         />
         {erroNumero && <p style={{ color: "red" }}>{erroNumero}</p>}
 
-        <input
-          type="text"
-          placeholder="Nome da empresa"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          required
-          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-        />
+      <input
+        type="text"
+        placeholder="Nome da empresa"
+        value={nome}
+        onChange={(e) => setNome(e.target.value.toUpperCase())}
+        required
+        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+      />
+
+          
+
 
         <label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}>CNPJ</label>
         <InputMask mask={mask} value={docExibicao} onChange={handleDocumentoChange}>
