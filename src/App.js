@@ -90,7 +90,7 @@ export default function App() {
     } else {
       setErroDocumento(isValidCNPJ(digits) ? "" : "CNPJ inválido.");
     }
-  }
+  
 
   function handleNumeroChange(e) {
   let digits = onlyDigits(e.target.value).slice(0, 5);
@@ -102,19 +102,19 @@ export default function App() {
   
   
     <input
-  type="text"
-  placeholder="Número da empresa (5 dígitos)"
-  value={numero}
-  onChange={handleNumeroChange}
-  onBlur={() => {
-    if (numero && numero.length < 5) {
-      setNumero(numero.padStart(5, "0")); // completa com zeros só se tiver menos de 5 dígitos
-    }
-  }}
-  required
-  style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-/>
-{erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
+       type="text"
+       placeholder="Número da empresa (5 dígitos)"
+       value={numero}
+       onChange={handleNumeroChange}
+       onBlur={() => {
+         if (numero && numero.length < 5) {
+           setNumero(numero.padStart(5, "0")); // completa com zeros só se tiver menos de 5 dígitos
+         }
+       }}
+       required
+       style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+    />
+    {erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
 
 
 
@@ -221,77 +221,64 @@ export default function App() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="Número da empresa (5 dígitos)"
-          value={numero}
-          onChange={handleNumeroChange}
-          required
-          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-        />
-        {erroNumero && <p style={{ color: "red" }}>{erroNumero}</p>}
+      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
+  {/* Número da empresa */}
+  <input
+    type="text"
+    placeholder="Número da empresa (5 dígitos)"
+    value={numero}
+    onChange={handleNumeroChange}
+    onBlur={() => {
+      if (numero && numero.length < 5) {
+        setNumero(numero.padStart(5, "0")); // completa com zeros à esquerda
+      }
+    }}
+    required
+    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+  />
+  {erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
 
-      <input
-        type="text"
-        placeholder="Nome da empresa"
-        value={nome}
-        onChange={(e) => setNome(e.target.value.toUpperCase())}
-        required
-        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-      />
+  {/* Nome da empresa */}
+  <input
+    type="text"
+    placeholder="Nome da empresa"
+    value={nome}
+    onChange={(e) => setNome(e.target.value.toUpperCase())} // força maiúsculo
+    required
+    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+  />
 
-          
+  {/* CNPJ */}
+  <div style={{ marginBottom: "10px" }}>
+    <label style={{ display: "block", marginBottom: "4px" }}>CNPJ</label>
+    <input
+      type="text"
+      placeholder="Digite o CNPJ"
+      value={docExibicao}
+      onChange={handleDocumentoChange}
+      required
+      style={{ width: "100%", padding: "8px" }}
+    />
+    {erroDocumento && <div style={{ color: "red" }}>{erroDocumento}</div>}
+  </div>
 
+  {/* Botão de submit */}
+  <button
+    type="submit"
+    style={{
+      padding: "10px 15px",
+      background: editandoId ? "#ffc107" : "#007bff",
+      color: "white",
+      border: "none",
+      borderRadius: 6,
+      cursor: "pointer",
+      marginTop: 6,
+    }}
+  >
+    {editandoId ? "Salvar alterações" : "Cadastrar"}
+  </button>
+</form>
 
-        <label style={{ display: "block", fontWeight: "bold", marginBottom: 4 }}>CNPJ</label>
-        <InputMask mask={mask} value={docExibicao} onChange={handleDocumentoChange}>
-          {(inputProps) => (
-            <input
-              {...inputProps}
-              type="text"
-              placeholder="Digite o CNPJ"
-              style={{ width: "100%", padding: 8, marginBottom: 6 }}
-              required
-            />
-          )}
-        </InputMask>
-        {erroDocumento && <p style={{ color: "red" }}>{erroDocumento}</p>}
-
-        <button
-          type="submit"
-          style={{
-            padding: "10px 15px",
-            background: editandoId ? "#ffc107" : "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-            marginTop: 6,
-          }}
-        >
-          {editandoId ? "Salvar alterações" : "Cadastrar"}
-        </button>
-
-        {editandoId && (
-          <button
-            type="button"
-            onClick={resetForm}
-            style={{
-              padding: "10px 15px",
-              background: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              cursor: "pointer",
-              marginTop: 6,
-              marginLeft: 10,
-            }}
-          >
-            Cancelar edição
-          </button>
-        )}
-      </form>
 
       <div style={{ marginTop: 20 }}>
         <button
