@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import InputMask from "react-input-mask";
 
-const API_URL = "http://localhost:8000"; // ajuste se o backend estiver em outra porta/URL
+const API_URL = "https://sistema-obras.onrender.com"; // ajuste se o backend estiver em outra porta/URL
 
 // 🔹 Remove caracteres não numéricos
 function onlyDigits(str) {
