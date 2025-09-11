@@ -75,7 +75,7 @@ export default function App() {
     }
   }
 
-  function handleDocumentoChange(e) {
+  function handleDocumentoChange(e)   {   
     const exibicao = e.target.value;
     const digits = onlyDigits(exibicao);
     setDocExibicao(exibicao);
@@ -84,7 +84,7 @@ export default function App() {
     if (digits.length === 0) {
       setErroDocumento("");
       return;
-    }
+   }
     if (digits.length < 14) {
       setErroDocumento("Digite 14 dígitos para CNPJ.");
     } else {
@@ -97,7 +97,7 @@ export default function App() {
         setNumero(digits);
         setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
         console.log("handleNumeroChange -> numero:", digits);
-      }
+     }
       function padNumeroOnBlur() {
         console.log("padNumeroOnBlur - antes:", numero);
         if (!numero) return;                // nada a fazer se vazio
