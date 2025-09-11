@@ -92,7 +92,25 @@ export default function App() {
     }
   
 
-  function handleNumeroChange(e) {
+     function handleNumeroChange(e) {
+        const digits = onlyDigits(e.target.value).slice(0, 5);
+        setNumero(digits);
+        setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
+        console.log("handleNumeroChange -> numero:", digits);
+      }
+      function padNumeroOnBlur() {
+        console.log("padNumeroOnBlur - antes:", numero);
+        if (!numero) return;                // nada a fazer se vazio
+        const padded = numero.padStart(5, "0");
+        if (padded !== numero) {
+          setNumero(padded);
+          console.log("padNumeroOnBlur - depois:", padded);
+        } else {
+          console.log("padNumeroOnBlur - já estava preenchido:", numero);
+        }
+      }
+          
+    (e) {
   let digits = onlyDigits(e.target.value).slice(0, 5);
   setNumero(digits);
   setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
@@ -102,17 +120,15 @@ export default function App() {
   
   
     <input
-       type="text"
-       placeholder="Número da empresa (5 dígitos)"
-       value={numero}
-       onChange={handleNumeroChange}
-       onBlur={() => {
-         if (numero && numero.length < 5) {
-           setNumero(numero.padStart(5, "0")); // completa com zeros só se tiver menos de 5 dígitos
-         }
-       }}
-       required
-       style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+      type="text"
+      placeholder="Número da empresa (5 dígitos)"
+      value={numero}
+      onChange={handleNumeroChange}
+      onBlur={padNumeroOnBlur}
+      inputMode="numeric"
+      pattern="\d*"
+      required
+      style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
     />
     {erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
 
