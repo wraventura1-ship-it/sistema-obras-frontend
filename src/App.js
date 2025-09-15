@@ -238,21 +238,7 @@ export default function App() {
       )}
 
       <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-  {/* Número da empresa */}
-  <input
-    type="text"
-    placeholder="Número da empresa (5 dígitos)"
-    value={numero}
-    onChange={handleNumeroChange}
-    onBlur={() => {
-      if (numero && numero.length < 5) {
-        setNumero(numero.padStart(5, "0")); // completa com zeros à esquerda
-      }
-    }}
-    required
-    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-  />
-  {erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
+  
 
   {/* Nome da empresa */}
   <input
