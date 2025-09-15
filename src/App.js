@@ -119,126 +119,20 @@ export default function App() {
 
   
   
-    <input
-      type="text"
-      placeholder="Número da empresa (5 dígitos)"
-      value={numero}
-      onChange={handleNumeroChange}
-      onBlur={padNumeroOnBlur}
-      inputMode="numeric"
-      pattern="\d*"
-      required
-      style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-    />
-    {erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
-
-
-
-
-  
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    try {
-      const payload = { numero, nome, documento };
-      let response;
-
-      if (editandoId) {
-        response = await fetch(`${API_URL}/empresas/${editandoId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        response = await fetch(`${API_URL}/empresas`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData?.detail || "Erro ao salvar empresa");
-      }
-
-      setMensagem(editandoId ? "✅ Empresa atualizada!" : "✅ Empresa cadastrada!");
-      resetForm();
-      carregarEmpresas();
-      setMostrarLista(true);
-    } catch (error) {
-      console.error(error);
-      setMensagem("❌ " + error.message);
-    } finally {
-      setTimeout(() => setMensagem(""), 4000);
-    }
-  }
-
-  function resetForm() {
-    setNumero("");
-    setNome("");
-    setDocExibicao("");
-    setDocumento("");
-    setErroDocumento("");
-    setErroNumero("");
-    setEditandoId(null);
-  }
-
-  function handleEditar(e) {
-    setNumero(e.numero);
-    setNome(e.nome);
-    setDocExibicao(formatDocumento(e.documento));
-    setDocumento(e.documento);
-    setEditandoId(e.id);
-  }
-
-  async function handleDeletar(id) {
-    if (!window.confirm("Tem certeza que deseja excluir esta empresa?")) return;
-
-    try {
-      const resp = await fetch(`${API_URL}/empresas/${id}`, { method: "DELETE" });
-      if (!resp.ok) throw new Error("Erro ao excluir");
-      setMensagem("✅ Empresa excluída com sucesso!");
-      carregarEmpresas();
-    } catch (err) {
-      console.error(err);
-      setMensagem("❌ Erro ao excluir empresa.");
-    } finally {
-      setTimeout(() => setMensagem(""), 4000);
-    }
-  }
-
-  const mask = "99.999.999/9999-99";
-
-  
-  // 🔹 filtro + ordenação
-  const empresasFiltradas = empresas
-    .filter((e) =>
-      e.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      e.numero.includes(busca)
-    )
-    .sort((a, b) => {
-      if (ordenarPor === "numero") {
-        return a.numero.localeCompare(b.numero);
-      }
-      if (ordenarPor === "nome") {
-        return a.nome.localeCompare(b.nome);
-      }
-      return 0;
-    });
-  
-  return (
-    <div style={{ maxWidth: 520, margin: "30px auto", fontFamily: "Arial, sans-serif" }}>
-      <h2 style={{ marginBottom: 16 }}>Cadastro de Empresas</h2>
-
-      {mensagem && (
-        <div style={{ marginBottom: 12, padding: 10, borderRadius: 6, background: "#f1f5ff" }}>
-          {mensagem}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-  
+   <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
+  {/* Número da empresa */}
+  <input
+    type="text"
+    placeholder="Número da empresa (5 dígitos)"
+    value={numero}
+    onChange={handleNumeroChange}
+    onBlur={padNumeroOnBlur}
+    inputMode="numeric"
+    pattern="\d*"
+    required
+    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+  />
+  {erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
 
   {/* Nome da empresa */}
   <input
@@ -279,7 +173,27 @@ export default function App() {
   >
     {editandoId ? "Salvar alterações" : "Cadastrar"}
   </button>
+
+  {editandoId && (
+    <button
+      type="button"
+      onClick={resetForm}
+      style={{
+        padding: "10px 15px",
+        background: "#6c757d",
+        color: "white",
+        border: "none",
+        borderRadius: 6,
+        cursor: "pointer",
+        marginTop: 6,
+        marginLeft: 10,
+      }}
+    >
+      Cancelar edição
+    </button>
+  )}
 </form>
+
 
 
       <div style={{ marginTop: 20 }}>
