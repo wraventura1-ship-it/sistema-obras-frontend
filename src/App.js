@@ -1,211 +1,175 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function App() {
+const API_URL = "http://localhost:8000"; 
+// 👉 Se publicar no Render, troque por: https://seu-backend.onrender.com
+
+function App() {
   const [empresas, setEmpresas] = useState([]);
-  const [numero, setNumero] = useState("");
-  const [nome, setNome] = useState("");
-  const [documento, setDocumento] = useState("");
-  const [docExibicao, setDocExibicao] = useState("");
-  const [erroNumero, setErroNumero] = useState("");
-  const [erroDocumento, setErroDocumento] = useState("");
-  const [editandoId, setEditandoId] = useState(null);
+  const [form, setForm] = useState({ numero: "", nome: "", documento: "" });
+  const [editId, setEditId] = useState(null);
+  const [mensagem, setMensagem] = useState("");
 
-  // utilitário: mantém apenas dígitos
-  function onlyDigits(str) {
-    return str.replace(/\D/g, "");
-  }
-
-  // mantém só dígitos e limita a 5 enquanto digita
-  function handleNumeroChange(e) {
-    const digits = onlyDigits(e.target.value).slice(0, 5);
-    setNumero(digits);
-    setErroNumero(digits.length === 5 ? "" : "O número deve ter 5 dígitos.");
-  }
-
-  // completa com zeros à esquerda quando sai do campo
-  function padNumeroOnBlur() {
-    if (!numero) return; // se vazio não faz nada
-    const padded = numero.padStart(5, "0");
-    if (padded !== numero) {
-      setNumero(padded);
-    }
-  }
-
-  // formata CNPJ (exibição)
-  function formatCNPJ(value) {
-    const digits = onlyDigits(value).slice(0, 14);
-    return digits
-      .replace(/^(\d{2})(\d)/, "$1.$2")
-      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1/$2")
-      .replace(/(\d{4})(\d)/, "$1-$2");
-  }
-
-  function handleDocumentoChange(e) {
-    const digits = onlyDigits(e.target.value).slice(0, 14);
-    setDocumento(digits);
-    setDocExibicao(formatCNPJ(digits));
-    setErroDocumento(digits.length === 14 ? "" : "O CNPJ deve ter 14 dígitos.");
-  }
-
-  function resetForm() {
-    setNumero("");
-    setNome("");
-    setDocumento("");
-    setDocExibicao("");
-    setErroNumero("");
-    setErroDocumento("");
-    setEditandoId(null);
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    if (erroNumero || erroDocumento) return;
-
-    const empresa = {
-      numero,
-      nome,
-      documento,
-    };
-
+  // ==============================
+  // FUNÇÕES DE API
+  // ==============================
+  const carregarEmpresas = async () => {
     try {
-      if (editandoId) {
-        await axios.put(`http://localhost:5000/empresas/${editandoId}`, empresa);
-      } else {
-        await axios.post("http://localhost:5000/empresas", empresa);
-      }
-      fetchEmpresas();
-      resetForm();
-    } catch (error) {
-      console.error("Erro ao salvar empresa:", error);
-    }
-  }
-
-  async function fetchEmpresas() {
-    try {
-      const res = await axios.get("http://localhost:5000/empresas");
+      const res = await axios.get(`${API_URL}/empresas`);
       setEmpresas(res.data);
-    } catch (error) {
-      console.error("Erro ao buscar empresas:", error);
+    } catch (err) {
+      console.error(err);
+      setMensagem("Erro ao carregar empresas.");
     }
-  }
+  };
 
+  const salvarEmpresa = async (e) => {
+    e.preventDefault();
+    try {
+      if (editId) {
+        await axios.put(`${API_URL}/empresas/${editId}`, form);
+        setMensagem("Empresa atualizada com sucesso!");
+      } else {
+        await axios.post(`${API_URL}/empresas`, form);
+        setMensagem("Empresa cadastrada com sucesso!");
+      }
+      setForm({ numero: "", nome: "", documento: "" });
+      setEditId(null);
+      carregarEmpresas();
+    } catch (err) {
+      if (err.response) {
+        setMensagem(err.response.data.detail || "Erro ao salvar empresa.");
+      } else {
+        setMensagem("Erro de conexão com o servidor.");
+      }
+    }
+  };
+
+  const editarEmpresa = (empresa) => {
+    setForm({
+      numero: empresa.numero,
+      nome: empresa.nome,
+      documento: empresa.documento,
+    });
+    setEditId(empresa.id);
+  };
+
+  const excluirEmpresa = async (id) => {
+    if (!window.confirm("Tem certeza que deseja excluir?")) return;
+    try {
+      await axios.delete(`${API_URL}/empresas/${id}`);
+      setMensagem("Empresa excluída com sucesso!");
+      carregarEmpresas();
+    } catch (err) {
+      setMensagem("Erro ao excluir empresa.");
+    }
+  };
+
+  // ==============================
+  // HOOK DE INICIALIZAÇÃO
+  // ==============================
   useEffect(() => {
-    fetchEmpresas();
+    carregarEmpresas();
   }, []);
 
-  function handleEdit(empresa) {
-    setNumero(empresa.numero);
-    setNome(empresa.nome);
-    setDocumento(empresa.documento);
-    setDocExibicao(formatCNPJ(empresa.documento));
-    setEditandoId(empresa._id);
-  }
-
-  async function handleDelete(id) {
-    try {
-      await axios.delete(`http://localhost:5000/empresas/${id}`);
-      fetchEmpresas();
-    } catch (error) {
-      console.error("Erro ao excluir empresa:", error);
-    }
-  }
-
+  // ==============================
+  // RENDER
+  // ==============================
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ margin: "40px" }}>
       <h1>Cadastro de Empresas</h1>
 
-      {/* Formulário */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-        {/* Número da empresa */}
-        <input
-          type="text"
-          placeholder="Número da empresa (5 dígitos)"
-          value={numero}
-          onChange={handleNumeroChange}
-          onBlur={padNumeroOnBlur}
-          inputMode="numeric"
-          pattern="\d*"
-          required
-          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-        />
-        {erroNumero && <div style={{ color: "red" }}>{erroNumero}</div>}
+      {mensagem && (
+        <div style={{ marginBottom: "15px", color: "blue" }}>
+          {mensagem}
+        </div>
+      )}
 
-        {/* Nome da empresa */}
-        <input
-          type="text"
-          placeholder="Nome da empresa"
-          value={nome}
-          onChange={(e) => setNome(e.target.value.toUpperCase())}
-          required
-          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-        />
-
-        {/* CNPJ */}
-        <div style={{ marginBottom: "10px" }}>
-          <label style={{ display: "block", marginBottom: "4px" }}>CNPJ</label>
+      <form onSubmit={salvarEmpresa} style={{ marginBottom: "30px" }}>
+        <div>
+          <label>Número (até 5 dígitos): </label>
           <input
             type="text"
-            placeholder="Digite o CNPJ"
-            value={docExibicao}
-            onChange={handleDocumentoChange}
+            value={form.numero}
+            onChange={(e) =>
+              setForm({ ...form, numero: e.target.value.replace(/\D/g, "") })
+            }
             required
-            style={{ width: "100%", padding: "8px" }}
           />
-          {erroDocumento && (
-            <div style={{ color: "red" }}>{erroDocumento}</div>
-          )}
         </div>
-
-        {/* Botões */}
-        <button
-          type="submit"
-          style={{
-            padding: "10px 15px",
-            background: editandoId ? "#ffc107" : "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-            marginTop: 6,
-          }}
-        >
-          {editandoId ? "Salvar alterações" : "Cadastrar"}
+        <div>
+          <label>Nome: </label>
+          <input
+            type="text"
+            value={form.nome}
+            onChange={(e) => setForm({ ...form, nome: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <label>CNPJ (14 dígitos): </label>
+          <input
+            type="text"
+            value={form.documento}
+            onChange={(e) =>
+              setForm({ ...form, documento: e.target.value.replace(/\D/g, "") })
+            }
+            required
+          />
+        </div>
+        <button type="submit" style={{ marginTop: "10px" }}>
+          {editId ? "Atualizar" : "Cadastrar"}
         </button>
-
-        {editandoId && (
+        {editId && (
           <button
             type="button"
-            onClick={resetForm}
-            style={{
-              padding: "10px 15px",
-              background: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              cursor: "pointer",
-              marginTop: 6,
-              marginLeft: 10,
+            onClick={() => {
+              setForm({ numero: "", nome: "", documento: "" });
+              setEditId(null);
             }}
+            style={{ marginLeft: "10px" }}
           >
-            Cancelar edição
+            Cancelar
           </button>
         )}
       </form>
 
-      {/* Lista */}
-      <h2>Empresas cadastradas</h2>
-      <ul>
-        {empresas.map((empresa) => (
-          <li key={empresa._id}>
-            {empresa.numero} - {empresa.nome} - {formatCNPJ(empresa.documento)}
-            <button onClick={() => handleEdit(empresa)}>Editar</button>
-            <button onClick={() => handleDelete(empresa._id)}>Excluir</button>
-          </li>
-        ))}
-      </ul>
+      <h2>Lista de Empresas</h2>
+      <table border="1" cellPadding="8">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Nome</th>
+            <th>CNPJ</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {empresas.map((emp) => (
+            <tr key={emp.id}>
+              <td>{emp.numero}</td>
+              <td>{emp.nome}</td>
+              <td>{emp.documento}</td>
+              <td>
+                <button onClick={() => editarEmpresa(emp)}>Editar</button>
+                <button
+                  onClick={() => excluirEmpresa(emp.id)}
+                  style={{ marginLeft: "10px" }}
+                >
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          ))}
+          {empresas.length === 0 && (
+            <tr>
+              <td colSpan="4">Nenhuma empresa cadastrada.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
+
+export default App;
