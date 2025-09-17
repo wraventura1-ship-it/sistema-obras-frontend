@@ -163,9 +163,12 @@ function App() {
           <input
             type="text"
             value={formEmpresa.numero}
-            onChange={(e) =>
-              setFormEmpresa({ ...formEmpresa, numero: e.target.value.replace(/\D/g, "") })
-            }
+            onChange={(e) => {
+              const valor = e.target.value.replace(/\D/g, ""); // só números
+              const formatado = valor ? valor.padStart(5, "0") : ""; // preenche com zeros à esquerda
+              setFormEmpresa({ ...formEmpresa, numero: formatado });
+            }}
+            maxLength={5}
             required
           />
         </div>
