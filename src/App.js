@@ -258,9 +258,12 @@ function App() {
               <input
                 type="text"
                 value={formObra.numero}
-                onChange={(e) =>
-                  setFormObra({ ...formObra, numero: e.target.value.replace(/\D/g, "") })
-                }
+                onChange={(e) => {
+                  const valor = e.target.value.replace(/\D/g, ""); // apenas números
+                  const formatado = valor ? valor.padStart(4, "0") : ""; // completa com zeros
+                  setFormObra({ ...formObra, numero: formatado });
+                }}
+                maxLength={4}
                 required
               />
             </div>
