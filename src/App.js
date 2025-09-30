@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import InputMask from "react-input-mask";
 
 const API_URL = "http://localhost:8000"; // ajuste se necessário
 
@@ -187,12 +188,14 @@ function App() {
           </div>
           <div>
             <label>CNPJ: </label>
-            <input
-              type="text"
+            <InputMask
+              mask="99.999.999/9999-99"
               value={formEmpresa.documento}
               onChange={(e) => setFormEmpresa({ ...formEmpresa, documento: e.target.value })}
               required
-            />
+            >
+              {(inputProps) => <input {...inputProps} type="text" />}
+            </InputMask>
           </div>
           {mensagemEmpresa && <p style={{ color: "red" }}>{mensagemEmpresa}</p>}
           <button type="submit">{editEmpresaId ? "Atualizar" : "Cadastrar"}</button>
