@@ -8,14 +8,13 @@ function App() {
   const [empresas, setEmpresas] = useState([]);
   const [formEmpresa, setFormEmpresa] = useState({ numero: "", nome: "", documento: "" });
   const [editEmpresaId, setEditEmpresaId] = useState(null);
+  const [mensagemEmpresa, setMensagemEmpresa] = useState("");
 
-  const [mensagem, setMensagem] = useState("");
-
-  // estado para obras
   const [empresaSelecionada, setEmpresaSelecionada] = useState(null);
   const [obras, setObras] = useState([]);
   const [formObra, setFormObra] = useState({ numero: "", nome: "", bloco: "", endereco: "" });
   const [editObraId, setEditObraId] = useState(null);
+  const [mensagemObra, setMensagemObra] = useState("");
 
   // ==============================
   // EMPRESAS
@@ -25,8 +24,7 @@ function App() {
       const res = await axios.get(`${API_URL}/empresas`);
       setEmpresas(res.data);
     } catch (err) {
-      console.error(err);
-      setMensagem("Erro ao carregar empresas.");
+      setMensagemEmpresa("Erro ao carregar empresas.");
     }
   };
 
@@ -35,19 +33,19 @@ function App() {
     try {
       if (editEmpresaId) {
         await axios.put(`${API_URL}/empresas/${editEmpresaId}`, formEmpresa);
-        setMensagem("Empresa atualizada com sucesso!");
+        setMensagemEmpresa("Empresa atualizada com sucesso!");
       } else {
         await axios.post(`${API_URL}/empresas`, formEmpresa);
-        setMensagem("Empresa cadastrada com sucesso!");
+        setMensagemEmpresa("Empresa cadastrada com sucesso!");
       }
       setFormEmpresa({ numero: "", nome: "", documento: "" });
       setEditEmpresaId(null);
       carregarEmpresas();
     } catch (err) {
       if (err.response) {
-        setMensagem(err.response.data.detail || "Erro ao salvar empresa.");
+        setMensagemEmpresa(err.response.data.detail || "Erro ao salvar empresa.");
       } else {
-        setMensagem("Erro de conexão com o servidor.");
+        setMensagemEmpresa("Erro de conexão com o servidor.");
       }
     }
   };
@@ -59,16 +57,17 @@ function App() {
       documento: empresa.documento,
     });
     setEditEmpresaId(empresa.id);
+    setMensagemEmpresa("");
   };
 
   const excluirEmpresa = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir?")) return;
     try {
       await axios.delete(`${API_URL}/empresas/${id}`);
-      setMensagem("Empresa excluída com sucesso!");
+      setMensagemEmpresa("Empresa excluída com sucesso!");
       carregarEmpresas();
     } catch (err) {
-      setMensagem("Erro ao excluir empresa.");
+      setMensagemEmpresa("Erro ao excluir empresa.");
     }
   };
 
@@ -80,14 +79,14 @@ function App() {
       const res = await axios.get(`${API_URL}/empresas/${empresaId}/obras`);
       setObras(res.data);
     } catch (err) {
-      console.error(err);
-      setMensagem("Erro ao carregar obras.");
+      setMensagemObra("Erro ao carregar obras.");
     }
   };
 
   const abrirObras = (empresa) => {
     setEmpresaSelecionada(empresa);
     carregarObras(empresa.id);
+    setMensagemObra("");
   };
 
   const salvarObra = async (e) => {
@@ -97,19 +96,19 @@ function App() {
     try {
       if (editObraId) {
         await axios.put(`${API_URL}/obras/${editObraId}`, formObra);
-        setMensagem("Obra atualizada com sucesso!");
+        setMensagemObra("Obra atualizada com sucesso!");
       } else {
         await axios.post(`${API_URL}/empresas/${empresaSelecionada.id}/obras`, formObra);
-        setMensagem("Obra cadastrada com sucesso!");
+        setMensagemObra("Obra cadastrada com sucesso!");
       }
       setFormObra({ numero: "", nome: "", bloco: "", endereco: "" });
       setEditObraId(null);
       carregarObras(empresaSelecionada.id);
     } catch (err) {
       if (err.response) {
-        setMensagem(err.response.data.detail || "Erro ao salvar obra.");
+        setMensagemObra(err.response.data.detail || "Erro ao salvar obra.");
       } else {
-        setMensagem("Erro de conexão com o servidor.");
+        setMensagemObra("Erro de conexão com o servidor.");
       }
     }
   };
@@ -122,16 +121,17 @@ function App() {
       endereco: obra.endereco,
     });
     setEditObraId(obra.id);
+    setMensagemObra("");
   };
 
   const excluirObra = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir a obra?")) return;
     try {
       await axios.delete(`${API_URL}/obras/${id}`);
-      setMensagem("Obra excluída com sucesso!");
+      setMensagemObra("Obra excluída com sucesso!");
       carregarObras(empresaSelecionada.id);
     } catch (err) {
-      setMensagem("Erro ao excluir obra.");
+      setMensagemObra("Erro ao excluir obra.");
     }
   };
 
@@ -149,23 +149,17 @@ function App() {
     <div style={{ margin: "40px" }}>
       <h1>Sistema de Empresas e Obras</h1>
 
-      {mensagem && (
-        <div style={{ marginBottom: "15px", color: "blue" }}>
-          {mensagem}
-        </div>
-      )}
-
       {/* Cadastro de Empresas */}
       <h2>Cadastro de Empresas</h2>
-      <form onSubmit={salvarEmpresa} style={{ marginBottom: "30px" }}>
+      <form onSubmit={salvarEmpresa} style={{ marginBottom: "10px" }}>
         <div>
-          <label>Número (até 5 dígitos): </label>
+          <label>Número (5 dígitos): </label>
           <input
             type="text"
             value={formEmpresa.numero}
             onChange={(e) => {
-              const valor = e.target.value.replace(/\D/g, ""); // só números
-              const formatado = valor ? valor.padStart(5, "0") : ""; // preenche com zeros à esquerda
+              const valor = e.target.value.replace(/\D/g, "");
+              const formatado = valor ? valor.padStart(5, "0") : "";
               setFormEmpresa({ ...formEmpresa, numero: formatado });
             }}
             maxLength={5}
@@ -208,6 +202,11 @@ function App() {
           </button>
         )}
       </form>
+      {mensagemEmpresa && (
+        <div style={{ marginBottom: "20px", color: mensagemEmpresa.includes("sucesso") ? "green" : "red" }}>
+          {mensagemEmpresa}
+        </div>
+      )}
 
       {/* Lista de Empresas */}
       <h2>Empresas</h2>
@@ -255,15 +254,15 @@ function App() {
       {empresaSelecionada && (
         <div>
           <h2>Cadastro de Obras - {empresaSelecionada.nome}</h2>
-          <form onSubmit={salvarObra} style={{ marginBottom: "30px" }}>
+          <form onSubmit={salvarObra} style={{ marginBottom: "10px" }}>
             <div>
               <label>Número da Obra (4 dígitos): </label>
               <input
                 type="text"
                 value={formObra.numero}
                 onChange={(e) => {
-                  const valor = e.target.value.replace(/\D/g, ""); // apenas números
-                  const formatado = valor ? valor.padStart(4, "0") : ""; // completa com zeros
+                  const valor = e.target.value.replace(/\D/g, "");
+                  const formatado = valor ? valor.padStart(4, "0") : "";
                   setFormObra({ ...formObra, numero: formatado });
                 }}
                 maxLength={4}
@@ -315,6 +314,11 @@ function App() {
               </button>
             )}
           </form>
+          {mensagemObra && (
+            <div style={{ marginBottom: "20px", color: mensagemObra.includes("sucesso") ? "green" : "red" }}>
+              {mensagemObra}
+            </div>
+          )}
 
           {/* Lista de Obras */}
           <h3>Obras da empresa {empresaSelecionada.nome}</h3>
