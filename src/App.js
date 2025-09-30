@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import InputMask from "react-input-mask";
 
-const API_URL = "http://localhost:8000"; // ajuste se necessário
-
-// =========================
+// ===================================
 // Função de validação de CNPJ
-// =========================
+// ===================================
 function validarCNPJ(cnpj) {
   cnpj = cnpj.replace(/\D/g, "");
 
@@ -42,40 +40,44 @@ function validarCNPJ(cnpj) {
   return true;
 }
 
+// ===================================
+// Configuração da API (ajuste a URL)
+// ===================================
+const API_URL = "https://seu-backend-no-render.onrender.com"; // ajuste para o endereço correto
+
 function App() {
   const [empresas, setEmpresas] = useState([]);
+  const [formEmpresa, setFormEmpresa] = useState({
+    numero: "",
+    nome: "",
+    documento: "",
+  });
+  const [editEmpresaId, setEditEmpresaId] = useState(null);
+  const [mensagemEmpresa, setMensagemEmpresa] = useState("");
+
   const [obras, setObras] = useState([]);
+  const [formObra, setFormObra] = useState({
+    numero: "",
+    nome: "",
+    bloco: "",
+    endereco: "",
+  });
+  const [editObraId, setEditObraId] = useState(null);
+  const [mensagemObra, setMensagemObra] = useState("");
   const [empresaSelecionada, setEmpresaSelecionada] = useState(null);
 
-  const [formEmpresa, setFormEmpresa] = useState({ numero: "", nome: "", documento: "" });
-  const [formObra, setFormObra] = useState({ numero: "", nome: "", bloco: "", endereco: "" });
-
-  const [editEmpresaId, setEditEmpresaId] = useState(null);
-  const [editObraId, setEditObraId] = useState(null);
-
-  const [mensagemEmpresa, setMensagemEmpresa] = useState("");
-  const [mensagemObra, setMensagemObra] = useState("");
-
-  // =========================
-  // Carregar dados
-  // =========================
-  useEffect(() => {
-    carregarEmpresas();
-  }, []);
-
+  // ===================================
+  // Empresas
+  // ===================================
   const carregarEmpresas = async () => {
     const res = await axios.get(`${API_URL}/empresas`);
     setEmpresas(res.data);
   };
 
-  const carregarObras = async (empresaId) => {
-    const res = await axios.get(`${API_URL}/empresas/${empresaId}/obras`);
-    setObras(res.data);
-  };
+  useEffect(() => {
+    carregarEmpresas();
+  }, []);
 
-  // =========================
-  // CRUD EMPRESAS
-  // =========================
   const salvarEmpresa = async (e) => {
     e.preventDefault();
 
@@ -84,12 +86,17 @@ function App() {
       return;
     }
 
+    const payload = {
+      ...formEmpresa,
+      documento: formEmpresa.documento.replace(/\D/g, ""), // só números
+    };
+
     try {
       if (editEmpresaId) {
-        await axios.put(`${API_URL}/empresas/${editEmpresaId}`, formEmpresa);
+        await axios.put(`${API_URL}/empresas/${editEmpresaId}`, payload);
         setMensagemEmpresa("Empresa atualizada com sucesso!");
       } else {
-        await axios.post(`${API_URL}/empresas`, formEmpresa);
+        await axios.post(`${API_URL}/empresas`, payload);
         setMensagemEmpresa("Empresa cadastrada com sucesso!");
       }
       setFormEmpresa({ numero: "", nome: "", documento: "" });
@@ -105,22 +112,28 @@ function App() {
   };
 
   const editarEmpresa = (empresa) => {
-    setFormEmpresa(empresa);
+    setFormEmpresa({
+      numero: empresa.numero,
+      nome: empresa.nome,
+      documento: empresa.documento,
+    });
     setEditEmpresaId(empresa.id);
   };
 
   const excluirEmpresa = async (id) => {
     await axios.delete(`${API_URL}/empresas/${id}`);
     carregarEmpresas();
-    if (empresaSelecionada === id) {
-      setEmpresaSelecionada(null);
-      setObras([]);
-    }
   };
 
-  // =========================
-  // CRUD OBRAS
-  // =========================
+  // ===================================
+  // Obras
+  // ===================================
+  const carregarObras = async (empresaId) => {
+    const res = await axios.get(`${API_URL}/empresas/${empresaId}/obras`);
+    setObras(res.data);
+    setEmpresaSelecionada(empresaId);
+  };
+
   const salvarObra = async (e) => {
     e.preventDefault();
 
@@ -129,7 +142,10 @@ function App() {
         await axios.put(`${API_URL}/obras/${editObraId}`, formObra);
         setMensagemObra("Obra atualizada com sucesso!");
       } else {
-        await axios.post(`${API_URL}/empresas/${empresaSelecionada}/obras`, formObra);
+        await axios.post(
+          `${API_URL}/empresas/${empresaSelecionada}/obras`,
+          formObra
+        );
         setMensagemObra("Obra cadastrada com sucesso!");
       }
       setFormObra({ numero: "", nome: "", bloco: "", endereco: "" });
@@ -145,7 +161,12 @@ function App() {
   };
 
   const editarObra = (obra) => {
-    setFormObra(obra);
+    setFormObra({
+      numero: obra.numero,
+      nome: obra.nome,
+      bloco: obra.bloco,
+      endereco: obra.endereco,
+    });
     setEditObraId(obra.id);
   };
 
@@ -154,134 +175,123 @@ function App() {
     carregarObras(empresaSelecionada);
   };
 
-  // =========================
-  // RENDER
-  // =========================
+  // ===================================
+  // Renderização
+  // ===================================
   return (
-    <div style={{ display: "flex", gap: "50px", padding: "20px" }}>
-      {/* ================== EMPRESAS ================== */}
-      <div style={{ flex: 1 }}>
-        <h2>Empresas</h2>
-        <form onSubmit={salvarEmpresa}>
-          <div>
-            <label>Número: </label>
-            <input
-              type="text"
-              value={formEmpresa.numero}
-              onChange={(e) => {
-                const valor = e.target.value.replace(/\D/g, "");
-                const formatado = valor ? valor.padStart(5, "0") : "";
-                setFormEmpresa({ ...formEmpresa, numero: formatado });
-              }}
-              maxLength={5}
-              required
-            />
-          </div>
-          <div>
-            <label>Nome: </label>
-            <input
-              type="text"
-              value={formEmpresa.nome}
-              onChange={(e) => setFormEmpresa({ ...formEmpresa, nome: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>CNPJ: </label>
-            <InputMask
-              mask="99.999.999/9999-99"
-              value={formEmpresa.documento}
-              onChange={(e) => setFormEmpresa({ ...formEmpresa, documento: e.target.value })}
-              required
-            >
-              {(inputProps) => <input {...inputProps} type="text" />}
-            </InputMask>
-          </div>
-          {mensagemEmpresa && <p style={{ color: "red" }}>{mensagemEmpresa}</p>}
-          <button type="submit">{editEmpresaId ? "Atualizar" : "Cadastrar"}</button>
-        </form>
+    <div style={{ padding: "20px" }}>
+      <h1>Sistema de Obras</h1>
 
-        <ul>
-          {empresas.map((emp) => (
-            <li key={emp.id}>
-              {emp.numero} - {emp.nome} ({emp.documento})
-              <button onClick={() => editarEmpresa(emp)}>Editar</button>
-              <button onClick={() => excluirEmpresa(emp.id)}>Excluir</button>
-              <button
-                onClick={() => {
-                  setEmpresaSelecionada(emp.id);
-                  carregarObras(emp.id);
-                }}
-              >
-                Obras
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* ======================== */}
+      {/* Empresas */}
+      {/* ======================== */}
+      <h2>Empresas</h2>
+      <form onSubmit={salvarEmpresa}>
+        <label>Número:</label>
+        <input
+          type="text"
+          value={formEmpresa.numero}
+          onChange={(e) =>
+            setFormEmpresa({ ...formEmpresa, numero: e.target.value })
+          }
+          required
+        />
+        <label>Nome:</label>
+        <input
+          type="text"
+          value={formEmpresa.nome}
+          onChange={(e) =>
+            setFormEmpresa({ ...formEmpresa, nome: e.target.value })
+          }
+          required
+        />
+        <label>CNPJ:</label>
+        <InputMask
+          mask="99.999.999/9999-99"
+          value={formEmpresa.documento}
+          onChange={(e) =>
+            setFormEmpresa({ ...formEmpresa, documento: e.target.value })
+          }
+          required
+        >
+          {(inputProps) => <input {...inputProps} type="text" />}
+        </InputMask>
+        <button type="submit">
+          {editEmpresaId ? "Atualizar" : "Cadastrar"}
+        </button>
+      </form>
+      {mensagemEmpresa && <p style={{ color: "red" }}>{mensagemEmpresa}</p>}
 
-      {/* ================== OBRAS ================== */}
-      <div style={{ flex: 1 }}>
-        <h2>Obras</h2>
-        {empresaSelecionada ? (
+      <ul>
+        {empresas.map((emp) => (
+          <li key={emp.id}>
+            {emp.numero} - {emp.nome} - {emp.documento}{" "}
+            <button onClick={() => editarEmpresa(emp)}>Editar</button>
+            <button onClick={() => excluirEmpresa(emp.id)}>Excluir</button>
+            <button onClick={() => carregarObras(emp.id)}>Obras</button>
+          </li>
+        ))}
+      </ul>
+
+      {/* ======================== */}
+      {/* Obras */}
+      {/* ======================== */}
+      {empresaSelecionada && (
+        <div>
+          <h2>Obras</h2>
           <form onSubmit={salvarObra}>
-            <div>
-              <label>Número: </label>
-              <input
-                type="text"
-                value={formObra.numero}
-                onChange={(e) => {
-                  const valor = e.target.value.replace(/\D/g, "");
-                  const formatado = valor ? valor.padStart(4, "0") : "";
-                  setFormObra({ ...formObra, numero: formatado });
-                }}
-                maxLength={4}
-                required
-              />
-            </div>
-            <div>
-              <label>Nome: </label>
-              <input
-                type="text"
-                value={formObra.nome}
-                onChange={(e) => setFormObra({ ...formObra, nome: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label>Bloco: </label>
-              <input
-                type="text"
-                value={formObra.bloco}
-                onChange={(e) => setFormObra({ ...formObra, bloco: e.target.value })}
-              />
-            </div>
-            <div>
-              <label>Endereço: </label>
-              <input
-                type="text"
-                value={formObra.endereco}
-                onChange={(e) => setFormObra({ ...formObra, endereco: e.target.value })}
-                required
-              />
-            </div>
-            {mensagemObra && <p style={{ color: "red" }}>{mensagemObra}</p>}
-            <button type="submit">{editObraId ? "Atualizar" : "Cadastrar"}</button>
+            <label>Número:</label>
+            <input
+              type="text"
+              value={formObra.numero}
+              onChange={(e) =>
+                setFormObra({ ...formObra, numero: e.target.value })
+              }
+              required
+            />
+            <label>Nome:</label>
+            <input
+              type="text"
+              value={formObra.nome}
+              onChange={(e) =>
+                setFormObra({ ...formObra, nome: e.target.value })
+              }
+              required
+            />
+            <label>Bloco:</label>
+            <input
+              type="text"
+              value={formObra.bloco}
+              onChange={(e) =>
+                setFormObra({ ...formObra, bloco: e.target.value })
+              }
+            />
+            <label>Endereço:</label>
+            <input
+              type="text"
+              value={formObra.endereco}
+              onChange={(e) =>
+                setFormObra({ ...formObra, endereco: e.target.value })
+              }
+              required
+            />
+            <button type="submit">
+              {editObraId ? "Atualizar" : "Cadastrar"}
+            </button>
           </form>
-        ) : (
-          <p>Selecione uma empresa para ver as obras.</p>
-        )}
+          {mensagemObra && <p style={{ color: "red" }}>{mensagemObra}</p>}
 
-        <ul>
-          {obras.map((obra) => (
-            <li key={obra.id}>
-              {obra.numero} - {obra.nome} {obra.bloco && `(Bloco ${obra.bloco})`}
-              <button onClick={() => editarObra(obra)}>Editar</button>
-              <button onClick={() => excluirObra(obra.id)}>Excluir</button>
-            </li>
-          ))}
-        </ul>
-      </div>
+          <ul>
+            {obras.map((obra) => (
+              <li key={obra.id}>
+                {obra.numero} - {obra.nome} - {obra.bloco} - {obra.endereco}{" "}
+                <button onClick={() => editarObra(obra)}>Editar</button>
+                <button onClick={() => excluirObra(obra.id)}>Excluir</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
