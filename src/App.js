@@ -43,7 +43,7 @@ function validarCNPJ(cnpj) {
 // ===================================
 // Configuração da API (ajuste a URL)
 // ===================================
-const API_URL = "https://seu-backend-no-render.onrender.com"; // ajuste para o endereço correto
+const API_URL = "https://sistema-obras.onrender.com"; // ajuste para o endereço correto
 
 function App() {
   const [empresas, setEmpresas] = useState([]);
