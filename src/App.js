@@ -179,7 +179,7 @@ function App() {
   // Renderização
   // ===================================
   return (
-      <div style={{ display: "block", padding: "20px" }}>
+      <div style={{ padding: "20px" }}>
       <h1>Sistema de Obras</h1>
 
       {/* ======================== */}
